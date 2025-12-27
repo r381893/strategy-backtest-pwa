@@ -317,7 +317,7 @@ class BacktestEngine:
         
         total_profit = sum(t['pnl'] for t in wins)
         total_loss = abs(sum(t['pnl'] for t in losses))
-        profit_factor = total_profit / total_loss if total_loss > 0 else float('inf')
+        profit_factor = total_profit / total_loss if total_loss > 0 else 9999.0  # 避免 Infinity
         
         return {
             "total_trades": total_trades,
