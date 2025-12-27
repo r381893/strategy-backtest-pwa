@@ -3,8 +3,8 @@
  * 處理 UI 互動、API 呼叫與狀態管理
  */
 
-// Render 後端 API 基礎 URL（部署後需更新）
-const API_BASE_URL = 'https://your-render-backend.onrender.com';
+// Render 後端 API 基礎 URL
+const API_BASE_URL = 'https://strategy-backtest-pwa.onrender.com';
 
 // 應用狀態
 const AppState = {
