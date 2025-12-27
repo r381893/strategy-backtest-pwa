@@ -5,13 +5,13 @@
 
 // Firebase 設定
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY", // 需要從 Firebase Console 取得
+    apiKey: "AIzaSyAM8pfotSlxmcQEUzwdy77WWrjHv2LdlxM",
     authDomain: "backtesting-system-pro.firebaseapp.com",
-    databaseURL: "https://backtesting-system-pro-default-rtdb.asia-southeast1.firebasedatabase.app/",
+    databaseURL: "https://backtesting-system-pro-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "backtesting-system-pro",
-    storageBucket: "backtesting-system-pro.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    storageBucket: "backtesting-system-pro.firebasestorage.app",
+    messagingSenderId: "240029993002",
+    appId: "1:240029993002:web:04e03c0037839e62ec9b53"
 };
 
 // 初始化 Firebase
