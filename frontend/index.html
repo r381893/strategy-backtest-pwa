@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="description" content="高級回測系統 Pro - 支持現貨/期貨/加密貨幣回測分析">
+    
+    <title>📈 高級回測系統 Pro</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    
+    <!-- SheetJS for Excel parsing -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+    
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Hero Section -->
+    <header class="hero-section">
+        <h1 class="hero-title">🚀 高級回測系統 Pro</h1>
+        <p class="hero-subtitle">支持現貨/期貨/加密貨幣 • 手續費與滑價模擬 • 每月再平衡 • 逆價差收益計算</p>
+    </header>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-nav">
+        <button class="tab-btn active" data-tab="data-preview">📁 資料預覽</button>
+        <button class="tab-btn" data-tab="strategy-settings">⚙️ 策略設定</button>
+        <button class="tab-btn" data-tab="backtest-report">📊 回測報表</button>
+        <button class="tab-btn" data-tab="trade-details">📋 交易明細</button>
+        <button class="tab-btn" data-tab="optimization">🔍 參數優化</button>
+        <button class="tab-btn" data-tab="saved-strategies">💾 已儲存策略</button>
+    </nav>
+
+    <!-- Tab Contents -->
+    <main class="tab-contents">
+        <!-- Tab 1: 資料預覽 -->
+        <section id="data-preview" class="tab-content active">
+            <div class="upload-area" id="upload-area">
+                <div class="upload-icon">📂</div>
+                <h3>上傳成交價 Excel (.xlsx)</h3>
+                <p>拖曳檔案到此處，或點擊選擇檔案</p>
+                <input type="file" id="file-input" accept=".xlsx,.xls" hidden>
+                <button class="btn btn-primary" id="select-file-btn">選擇檔案</button>
+            </div>
+            
+            <div class="status-card hidden" id="data-status">
+                <h3>✅ 資料讀取成功</h3>
+                <p>總計 <b id="data-count">0</b> 筆資料</p>
+                <p>時間範圍: <b id="date-range-start">-</b> ~ <b id="date-range-end">-</b></p>
+            </div>
+            
+            <div class="chart-container hidden" id="price-chart-container">
+                <div id="price-chart"></div>
+            </div>
+        </section>
+
+        <!-- Tab 2: 策略設定 -->
+        <section id="strategy-settings" class="tab-content">
+            <div class="form-section">
+                <h2 class="section-title">🛠️ 核心回測參數</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="init-cash">初始資金</label>
+                        <input type="number" id="init-cash" value="100000" step="10000">
+                    </div>
+                    <div class="form-group">
+                        <label for="leverage">目標槓桿倍數</label>
+                        <input type="number" id="leverage" value="2.0" min="1" max="100" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="fee-rate">單邊手續費率 (%)</label>
+                        <input type="number" id="fee-rate" value="0.1" step="0.001">
+                    </div>
+                    <div class="form-group">
+                        <label for="slippage">預期滑價 (%)</label>
+                        <input type="number" id="slippage" value="0.05" step="0.001">
+                    </div>
+                    <div class="form-group">
+                        <label for="strategy-mode">核心策略類型</label>
+                        <select id="strategy-mode">
+                            <option value="buy-hold">永遠做多 (Buy & Hold)</option>
+                            <option value="single-ma">單均線策略 (Price vs MA)</option>
+                            <option value="dual-ma">雙均線策略 (Fast MA vs Slow MA)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2 class="section-title">📐 策略邏輯與再平衡</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="ma-fast">主均線天數 (MA Fast)</label>
+                        <input type="number" id="ma-fast" value="20" min="2">
+                    </div>
+                    <div class="form-group" id="ma-slow-group">
+                        <label for="ma-slow">慢線天數 (MA Slow)</label>
+                        <input type="number" id="ma-slow" value="60" min="3">
+                    </div>
+                    <div class="form-group">
+                        <label for="trade-direction">操作方向限制</label>
+                        <select id="trade-direction">
+                            <option value="long-only">僅做多</option>
+                            <option value="long-short">做多與做空</option>
+                        </select>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="rebalance" checked>
+                        <label for="rebalance">每月月初自動再平衡</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2 class="section-title">💰 逆價差收益</h2>
+                <div class="form-grid">
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="enable-yield">
+                        <label for="enable-yield">啟用逆價差收益</label>
+                    </div>
+                    <div class="form-group" id="yield-rate-group">
+                        <label for="yield-rate">年化收益率 (%)</label>
+                        <input type="range" id="yield-rate" min="0" max="10" value="4" step="0.5">
+                        <span id="yield-rate-display">4.0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2 class="section-title">📅 回測日期範圍</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="start-date">起始日期</label>
+                        <input type="date" id="start-date">
+                    </div>
+                    <div class="form-group">
+                        <label for="end-date">結束日期</label>
+                        <input type="date" id="end-date">
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary btn-full" id="run-backtest-btn">
+                🚀 執行策略回測
+            </button>
+            
+            <div class="loading-overlay hidden" id="backtest-loading">
+                <div class="spinner"></div>
+                <p>正在執行回測計算...</p>
+            </div>
+        </section>
+
+        <!-- Tab 3: 回測報表 -->
+        <section id="backtest-report" class="tab-content">
+            <div class="placeholder-msg" id="report-placeholder">
+                <p>📊 請先執行回測以查看報表</p>
+            </div>
+            
+            <div class="report-content hidden" id="report-content">
+                <h2 class="section-title">📌 核心績效指標</h2>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">最終資產價值</div>
+                        <div class="metric-value" id="final-value">-</div>
+                        <div class="metric-delta" id="total-return">-</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">年化報酬率 (CAGR)</div>
+                        <div class="metric-value" id="cagr">-</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">最大回撤 (MDD)</div>
+                        <div class="metric-value negative" id="mdd">-</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Sharpe Ratio</div>
+                        <div class="metric-value" id="sharpe">-</div>
+                    </div>
+                </div>
+
+                <h2 class="section-title">📈 淨值成長曲線</h2>
+                <div class="chart-container">
+                    <div id="equity-chart"></div>
+                </div>
+
+                <h2 class="section-title">📉 回撤分析</h2>
+                <div class="chart-container">
+                    <div id="drawdown-chart"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 4: 交易明細 -->
+        <section id="trade-details" class="tab-content">
+            <div class="placeholder-msg" id="trades-placeholder">
+                <p>📋 請先執行回測以查看交易明細</p>
+            </div>
+            
+            <div class="trades-content hidden" id="trades-content">
+                <h2 class="section-title">📊 交易統計摘要</h2>
+                <div class="metrics-grid">
+                    <div class="metric-card small">
+                        <div class="metric-label">總交易筆數</div>
+                        <div class="metric-value" id="total-trades">-</div>
+                    </div>
+                    <div class="metric-card small">
+                        <div class="metric-label">勝率</div>
+                        <div class="metric-value" id="win-rate">-</div>
+                    </div>
+                    <div class="metric-card small">
+                        <div class="metric-label">盈虧比</div>
+                        <div class="metric-value" id="profit-loss-ratio">-</div>
+                    </div>
+                    <div class="metric-card small">
+                        <div class="metric-label">獲利因子 (PF)</div>
+                        <div class="metric-value" id="profit-factor">-</div>
+                    </div>
+                </div>
+
+                <h2 class="section-title">📜 歷史交易明細</h2>
+                <div class="table-container">
+                    <table id="trades-table">
+                        <thead>
+                            <tr>
+                                <th>方向</th>
+                                <th>進場日</th>
+                                <th>出場日</th>
+                                <th>進場價</th>
+                                <th>出場價</th>
+                                <th>損益</th>
+                                <th>損益%</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 5: 參數優化 -->
+        <section id="optimization" class="tab-content">
+            <h2 class="section-title">🔍 自動參數優化</h2>
+            <p class="section-subtitle">尋找最佳的槓桿倍數、均線天數與操作方向組合</p>
+
+            <div class="form-section">
+                <h3 class="subsection-title">⚙️ 優化範圍設定</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>均線天數範圍</label>
+                        <div class="range-inputs">
+                            <input type="number" id="opt-ma-min" value="10" min="5">
+                            <span>~</span>
+                            <input type="number" id="opt-ma-max" value="60" min="10">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="opt-ma-step">均線天數間隔</label>
+                        <input type="number" id="opt-ma-step" value="10" min="5">
+                    </div>
+                    <div class="form-group">
+                        <label>槓桿倍數範圍</label>
+                        <div class="range-inputs">
+                            <input type="number" id="opt-lev-min" value="1.0" min="1" step="0.5">
+                            <span>~</span>
+                            <input type="number" id="opt-lev-max" value="3.0" max="5" step="0.5">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="opt-lev-step">槓桿間隔</label>
+                        <input type="number" id="opt-lev-step" value="0.5" min="0.5" step="0.5">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3 class="subsection-title">🛡️ 風控過濾條件</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="opt-max-mdd">最大回撤上限 (%)</label>
+                        <input type="number" id="opt-max-mdd" value="50" min="10" max="100">
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="opt-filter-liquidation" checked>
+                        <label for="opt-filter-liquidation">過濾爆倉組合</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="opt-target">優化目標</label>
+                        <select id="opt-target">
+                            <option value="total_return">總報酬率</option>
+                            <option value="cagr">年化報酬率 (CAGR)</option>
+                            <option value="sharpe">Sharpe Ratio</option>
+                            <option value="calmar">Calmar Ratio</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary btn-full" id="run-optimization-btn">
+                🚀 開始優化搜尋
+            </button>
+
+            <div class="optimization-progress hidden" id="opt-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="opt-progress-fill"></div>
+                </div>
+                <p id="opt-status-text">準備中...</p>
+            </div>
+
+            <div class="optimization-results hidden" id="opt-results">
+                <h2 class="section-title">🏆 最佳參數組合 (Top 10)</h2>
+                <div class="table-container">
+                    <table id="opt-results-table">
+                        <thead>
+                            <tr>
+                                <th>策略</th>
+                                <th>方向</th>
+                                <th>均線</th>
+                                <th>槓桿</th>
+                                <th>總報酬</th>
+                                <th>CAGR</th>
+                                <th>MDD</th>
+                                <th>Sharpe</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <div class="best-params-card" id="best-params-card">
+                    <!-- 動態填充 -->
+                </div>
+
+                <button class="btn btn-success btn-full" id="save-strategy-btn">
+                    💾 儲存最佳策略到 Firebase
+                </button>
+            </div>
+        </section>
+
+        <!-- Tab 6: 已儲存策略 -->
+        <section id="saved-strategies" class="tab-content">
+            <h2 class="section-title">💾 已儲存的最佳策略</h2>
+            <p class="section-subtitle">所有資產的最佳策略參數一覽</p>
+            
+            <div class="saved-list" id="saved-strategies-list">
+                <div class="placeholder-msg">
+                    <p>📭 尚無已儲存的策略</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-nav">
+        <button class="mobile-nav-btn active" data-tab="data-preview">📁</button>
+        <button class="mobile-nav-btn" data-tab="strategy-settings">⚙️</button>
+        <button class="mobile-nav-btn" data-tab="backtest-report">📊</button>
+        <button class="mobile-nav-btn" data-tab="trade-details">📋</button>
+        <button class="mobile-nav-btn" data-tab="optimization">🔍</button>
+        <button class="mobile-nav-btn" data-tab="saved-strategies">💾</button>
+    </nav>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/file-parser.js"></script>
+    <script src="js/chart.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
