@@ -201,8 +201,11 @@ function initButtons() {
     // 執行優化
     document.getElementById('run-optimization-btn').addEventListener('click', runOptimization);
 
-    // 儲存策略
+    // 儲存優化策略
     document.getElementById('save-strategy-btn').addEventListener('click', saveStrategy);
+
+    // 儲存回測結果
+    document.getElementById('save-backtest-btn').addEventListener('click', saveBacktestResult);
 }
 
 // ==========================================
@@ -468,6 +471,58 @@ async function saveStrategy() {
             loadSavedStrategies();
         } else {
             showToast('儲存失敗: ' + result.message, 'error');
+        }
+    } catch (error) {
+        showToast('儲存失敗: ' + error.message, 'error');
+    }
+}
+
+// ==========================================
+// 儲存回測結果
+// ==========================================
+async function saveBacktestResult() {
+    if (!AppState.backtestResult) {
+        showToast('沒有可儲存的回測結果', 'error');
+        return;
+    }
+
+    const result = AppState.backtestResult;
+    const strategyMode = document.getElementById('strategy-mode').value;
+    const strategyNames = {
+        'buy-hold': '永遠做多',
+        'single-ma': '單均線策略',
+        'dual-ma': '雙均線策略'
+    };
+    const directionNames = {
+        'long-only': '僅做多',
+        'long-short': '做多與做空'
+    };
+
+    const strategyData = {
+        strategy: strategyNames[strategyMode] || strategyMode,
+        direction: directionNames[document.getElementById('trade-direction').value] || '-',
+        ma_period: strategyMode === 'buy-hold' ? 0 : parseInt(document.getElementById('ma-fast').value),
+        leverage: parseFloat(document.getElementById('leverage').value),
+        total_return: result.total_return,
+        cagr: result.cagr,
+        mdd: result.mdd,
+        sharpe: result.sharpe,
+        calmar: result.mdd > 0 ? result.cagr / result.mdd : 0,
+        backtest_period: `${document.getElementById('start-date').value} ~ ${document.getElementById('end-date').value}`
+    };
+
+    try {
+        const saveResult = await FirebaseService.saveStrategy(
+            AppState.fileName,
+            strategyData,
+            null
+        );
+
+        if (saveResult.success) {
+            showToast('回測結果已儲存到 Firebase！', 'success');
+            loadSavedStrategies();
+        } else {
+            showToast('儲存失敗: ' + saveResult.message, 'error');
         }
     } catch (error) {
         showToast('儲存失敗: ' + error.message, 'error');
