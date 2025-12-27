@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -7,30 +8,32 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="description" content="高級回測系統 Pro - 支持現貨/期貨/加密貨幣回測分析">
-    
-    <title>📈 高級回測系統 Pro</title>
-    
+
+    <title>高級回測系統 Pro v1.0</title>
+
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="icons/icon-192.png">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
-    
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
     <!-- Plotly.js -->
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
-    
+
     <!-- SheetJS for Excel parsing -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
-    
+
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
-    
+
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
     <!-- Hero Section -->
     <header class="hero-section">
@@ -59,13 +62,13 @@
                 <input type="file" id="file-input" accept=".xlsx,.xls" hidden>
                 <button class="btn btn-primary" id="select-file-btn">選擇檔案</button>
             </div>
-            
+
             <div class="status-card hidden" id="data-status">
                 <h3>✅ 資料讀取成功</h3>
                 <p>總計 <b id="data-count">0</b> 筆資料</p>
                 <p>時間範圍: <b id="date-range-start">-</b> ~ <b id="date-range-end">-</b></p>
             </div>
-            
+
             <div class="chart-container hidden" id="price-chart-container">
                 <div id="price-chart"></div>
             </div>
@@ -160,7 +163,7 @@
             <button class="btn btn-primary btn-full" id="run-backtest-btn">
                 🚀 執行策略回測
             </button>
-            
+
             <div class="loading-overlay hidden" id="backtest-loading">
                 <div class="spinner"></div>
                 <p>正在執行回測計算...</p>
@@ -172,7 +175,7 @@
             <div class="placeholder-msg" id="report-placeholder">
                 <p>📊 請先執行回測以查看報表</p>
             </div>
-            
+
             <div class="report-content hidden" id="report-content">
                 <h2 class="section-title">📌 核心績效指標</h2>
                 <div class="metrics-grid">
@@ -212,7 +215,7 @@
             <div class="placeholder-msg" id="trades-placeholder">
                 <p>📋 請先執行回測以查看交易明細</p>
             </div>
-            
+
             <div class="trades-content hidden" id="trades-content">
                 <h2 class="section-title">📊 交易統計摘要</h2>
                 <div class="metrics-grid">
@@ -362,7 +365,7 @@
         <section id="saved-strategies" class="tab-content">
             <h2 class="section-title">💾 已儲存的最佳策略</h2>
             <p class="section-subtitle">所有資產的最佳策略參數一覽</p>
-            
+
             <div class="saved-list" id="saved-strategies-list">
                 <div class="placeholder-msg">
                     <p>📭 尚無已儲存的策略</p>
@@ -390,4 +393,5 @@
     <script src="js/chart.js"></script>
     <script src="js/app.js"></script>
 </body>
+
 </html>
