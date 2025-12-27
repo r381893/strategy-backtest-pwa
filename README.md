@@ -59,6 +59,31 @@ pwa/
 
 > ⚠️ 記得在 `frontend/js/firebase-config.js` 中填入正確的 Firebase API Key
 
+#### 資料庫規則設定
+
+為了讓 PWA 前端可以讀寫資料，需要在 Firebase Console 設定 Realtime Database 規則：
+
+1. 前往 [Firebase Console](https://console.firebase.google.com/)
+2. 選擇 **Backtesting System Pro** 專案
+3. 左側選單點擊「**Realtime Database**」
+4. 點擊「**規則**」標籤
+5. 將規則改為：
+
+```json
+{
+  "rules": {
+    "best_strategies": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}
+```
+
+6. 點擊「**發布**」
+
+> ⚠️ **安全提醒**：此設定允許任何人讀寫 `best_strategies` 節點。若需要更嚴格的安全控制，可加入 Firebase Authentication。
+
 ## 本地開發
 
 ### 前端
